@@ -2,25 +2,21 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>POS Estable</title>
+    <title>POS Fluido</title>
 
     <!--
-    POS COMPLETO Y ESTABLE
+    POS COMPLETO - MODO CAJA RÁPIDA
 
     ✔ Multi-cliente (tickets)
-    ✔ Carrito con cantidades
-    ✔ Venta con detalle
-    ✔ Offline (cola local)
-    ✔ Auto-sync REAL (sin recargar)
-    ✔ UI nunca se bloquea
-    ✔ Toast siempre visible
-    ✔ Puerto 5210
+    ✔ Carrito editable
+    ✔ Envío con detalle de venta
+    ✔ Modo offline + auto-sync
+    ✔ Notificaciones
+    ✔ NO se bloquea
+    ✔ AUTO creación de cliente al terminar venta (si no hay más)
+    ✔ Flujo continuo tipo supermercado
 
-    FIXES IMPORTANTES:
-    - Sync no bloquea UI
-    - Fetch con timeout
-    - Manejo de errores correcto
-    - No se queda pegado al vender
+    Backend: http://localhost:5210
     -->
 
     <style>
@@ -72,7 +68,7 @@
 </head>
 <body>
 
-    <h2>POS Estable</h2>
+    <h2>POS Fluido</h2>
 
     <button onclick="nuevoTicket()">+ Nuevo Cliente</button>
 
@@ -292,16 +288,22 @@
                 mostrarToast("Guardado offline ✔");
             }
 
-            // limpiar ticket SIN bloquear UI
+            // eliminar ticket actual
             tickets = tickets.filter(t => t.id !== ticketActivo.id);
-            ticketActivo = tickets[0] || null;
+
+            // lógica inteligente
+            if (tickets.length > 0) {
+                ticketActivo = tickets[0];
+            } else {
+                nuevoTicket(); // AUTO cliente nuevo
+            }
 
             renderTickets();
             render();
         }
 
         /* =========================
-           OFFLINE + SYNC REAL
+           OFFLINE + SYNC
         ========================= */
 
         function guardarOffline(venta) {
@@ -325,7 +327,7 @@
                         body: JSON.stringify(venta)
                     });
                 } catch {
-                    nuevasCola.push(venta); // mantener las que fallaron
+                    nuevasCola.push(venta);
                 }
             }
 
