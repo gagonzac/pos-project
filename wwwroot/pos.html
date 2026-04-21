@@ -1,0 +1,77 @@
+﻿<!DOCTYPE html>
+<html>
+<body>
+
+    <h2>POS1111 Test</h2>
+
+    <div id="productos"></div>
+
+    <h3>Carrito</h3>
+    <ul id="carrito"></ul>
+
+    <h3>Total: <span id="total">0</span></h3>
+
+    <button onclick="finalizarVenta()">Finalizar Venta</button>
+
+    <script>
+let productos = [];
+let carrito = [];
+
+async function cargarProductos() {
+    const res = await fetch("/productos");
+  productos = await res.json();
+
+  const div = document.getElementById("productos");
+
+  productos.forEach(p => {
+    const btn = document.createElement("button");
+    btn.innerText = p.nombre + " $" + p.precio;
+    btn.onclick = () => agregar(p);
+    div.appendChild(btn);
+  });
+}
+
+function agregar(p) {
+  carrito.push(p);
+  render();
+}
+
+function render() {
+  const ul = document.getElementById("carrito");
+  ul.innerHTML = "";
+
+  let total = 0;
+
+  carrito.forEach(p => {
+    const li = document.createElement("li");
+    li.innerText = p.nombre + " $" + p.precio;
+    ul.appendChild(li);
+    total += p.precio;
+  });
+
+  document.getElementById("total").innerText = total;
+}
+
+async function finalizarVenta() {
+  const venta = {
+    uuid: crypto.randomUUID(),
+    fecha: new Date(),
+    total: carrito.reduce((a,b)=>a+b.precio,0)
+  };
+
+  await fetch("http://localhost:5000/ventas", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify(venta)
+  });
+
+  alert("Venta enviada");
+  carrito = [];
+  render();
+}
+
+cargarProductos();
+    </script>
+
+</body>
+</html>
