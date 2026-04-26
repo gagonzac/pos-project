@@ -1,9 +1,11 @@
 ﻿<!DOCTYPE html>
+
 <html>
 <head>
     <meta charset="UTF-8">
     <title>POS Fluido</title>
 
+    ```
     <!--
     POS COMPLETO - MODO CAJA RÁPIDA
 
@@ -63,9 +65,17 @@
             padding: 15px;
             display: none;
         }
+
+        input {
+            margin-top: 10px;
+            padding: 8px;
+            width: 60%;
+        }
     </style>
+    ```
 
 </head>
+
 <body>
 
     <h2>POS Fluido</h2>
@@ -96,6 +106,26 @@
 
     <button onclick="finalizarVenta()">Finalizar Venta</button>
 
+    <!-- 🔥 BUSCADOR + TABLA -->
+
+    <h3>Listado de Productos</h3>
+
+    <input type="text"
+           id="buscarProducto"
+           placeholder="Buscar por código o nombre..."
+           oninput="filtrarProductos()" />
+
+    <table>
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Precio</th>
+            </tr>
+        </thead>
+        <tbody id="tablaProductos"></tbody>
+    </table>
+
     <div id="toast"></div>
 
     <script>
@@ -104,19 +134,13 @@
         let tickets = [];
         let ticketActivo = null;
 
-        /* =========================
-           FETCH CON TIMEOUT
-        ========================= */
-
+        /* FETCH */
         async function fetchTimeout(url, options = {}, timeout = 2000) {
             const controller = new AbortController();
             const id = setTimeout(() => controller.abort(), timeout);
 
             try {
-                const response = await fetch(url, {
-                    ...options,
-                    signal: controller.signal
-                });
+                const response = await fetch(url, { ...options, signal: controller.signal });
                 clearTimeout(id);
                 return response;
             } catch (error) {
@@ -125,19 +149,11 @@
             }
         }
 
-        /* =========================
-           TICKETS
-        ========================= */
-
+        /* TICKETS */
         function nuevoTicket() {
-            const ticket = {
-                id: Date.now(),
-                carrito: []
-            };
-
+            const ticket = { id: Date.now(), carrito: [] };
             tickets.push(ticket);
             ticketActivo = ticket;
-
             renderTickets();
             render();
         }
@@ -161,10 +177,7 @@
             });
         }
 
-        /* =========================
-           PRODUCTOS
-        ========================= */
-
+        /* PRODUCTOS */
         async function cargarProductos() {
             try {
                 const res = await fetchTimeout("http://localhost:5210/productos");
@@ -180,15 +193,46 @@
                     div.appendChild(btn);
                 });
 
+                renderTablaProductos();
+
             } catch {
                 mostrarToast("Error cargando productos");
             }
         }
 
-        /* =========================
-           CARRITO
-        ========================= */
+        /* TABLA + FILTRO */
+        function renderTablaProductos(lista = productos) {
+            const tbody = document.getElementById("tablaProductos");
+            tbody.innerHTML = "";
 
+            lista.forEach(p => {
+                const tr = document.createElement("tr");
+
+                tr.innerHTML = `
+                <td>${p.id}</td>
+                <td>${p.nombre}</td>
+                <td>$${p.precio}</td>
+            `;
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filtrarProductos() {
+            const texto = document
+                .getElementById("buscarProducto")
+                .value
+                .toLowerCase();
+
+            const filtrados = productos.filter(p =>
+                p.nombre.toLowerCase().includes(texto) ||
+                p.id.toString().includes(texto)
+            );
+
+            renderTablaProductos(filtrados);
+        }
+
+        /* CARRITO */
         function agregar(p) {
             if (!ticketActivo) return;
 
@@ -234,16 +278,16 @@
                 const tr = document.createElement("tr");
 
                 tr.innerHTML = `
-          <td>${p.nombre}</td>
-          <td>${p.cantidad}</td>
-          <td>$${p.precio}</td>
-          <td>$${subtotal}</td>
-          <td>
-            <button onclick="cambiarCantidad(${p.id},1)">+</button>
-            <button onclick="cambiarCantidad(${p.id},-1)">-</button>
-            <button onclick="eliminar(${p.id})">X</button>
-          </td>
-        `;
+                <td>${p.nombre}</td>
+                <td>${p.cantidad}</td>
+                <td>$${p.precio}</td>
+                <td>$${subtotal}</td>
+                <td>
+                    <button onclick="cambiarCantidad(${p.id},1)">+</button>
+                    <button onclick="cambiarCantidad(${p.id},-1)">-</button>
+                    <button onclick="eliminar(${p.id})">X</button>
+                </td>
+            `;
 
                 tbody.appendChild(tr);
             });
@@ -251,10 +295,7 @@
             document.getElementById("total").innerText = total;
         }
 
-        /* =========================
-           VENTA
-        ========================= */
-
+        /* VENTA */
         async function finalizarVenta() {
             if (!ticketActivo || ticketActivo.carrito.length === 0) {
                 mostrarToast("Carrito vacío");
@@ -288,24 +329,16 @@
                 mostrarToast("Guardado offline ✔");
             }
 
-            // eliminar ticket actual
             tickets = tickets.filter(t => t.id !== ticketActivo.id);
 
-            // lógica inteligente
-            if (tickets.length > 0) {
-                ticketActivo = tickets[0];
-            } else {
-                nuevoTicket(); // AUTO cliente nuevo
-            }
+            if (tickets.length > 0) ticketActivo = tickets[0];
+            else nuevoTicket();
 
             renderTickets();
             render();
         }
 
-        /* =========================
-           OFFLINE + SYNC
-        ========================= */
-
+        /* OFFLINE */
         function guardarOffline(venta) {
             let cola = JSON.parse(localStorage.getItem("colaVentas") || "[]");
             cola.push(venta);
@@ -338,10 +371,7 @@
             }
         }
 
-        /* =========================
-           UI
-        ========================= */
-
+        /* UI */
         function mostrarToast(msg) {
             const t = document.getElementById("toast");
             t.innerText = msg;
@@ -352,16 +382,10 @@
             }, 2500);
         }
 
-        /* =========================
-           AUTO-SYNC
-        ========================= */
-
+        /* AUTO */
         setInterval(sincronizar, 4000);
 
-        /* =========================
-           INIT
-        ========================= */
-
+        /* INIT */
         cargarProductos();
         nuevoTicket();
 
