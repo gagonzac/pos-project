@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿<
+<!DOCTYPE html>
 
 <html>
 <head>
@@ -6,10 +7,7 @@
     <title>POS Fluido</title>
 
     ```
-    <!--
-    POS COMPLETO - MODO CAJA RÁPIDA
-    Backend: http://localhost:5210
-    -->
+    <!-- POS COMPLETO - Backend: http://localhost:5210 -->
 
     <style>
         body {
@@ -54,6 +52,12 @@
                 background: #f2f2f2;
             }
 
+        input {
+            margin-top: 10px;
+            padding: 8px;
+            width: 60%;
+        }
+
         #toast {
             position: fixed;
             bottom: 20px;
@@ -64,13 +68,7 @@
             display: none;
         }
 
-        input {
-            margin-top: 10px;
-            padding: 8px;
-            width: 60%;
-        }
-
-        /* PANEL LATERAL */
+        /* PANEL */
         #panel {
             position: fixed;
             top: 0;
@@ -95,7 +93,7 @@
 
     <h2>POS Fluido</h2>
 
-    <button onclick="nuevoTicket()">+ Nuevo Cliente</button> <button onclick="abrirPanel()">+ Agregar Producto</button>
+    <button onclick="nuevoTicket()">+ Nuevo Cliente</button> <button onclick="abrirPanel()">+ Producto</button>
 
     <h3>Tickets</h3>
     <div id="tickets"></div>
@@ -131,6 +129,7 @@
                 <th>Código</th>
                 <th>Nombre</th>
                 <th>Precio</th>
+                <th>Acciones</th>
             </tr>
         </thead>
         <tbody id="tablaProductos"></tbody>
@@ -139,7 +138,7 @@
     <!-- PANEL -->
 
     <div id="panel">
-        <h3>Nuevo Producto</h3>
+        <h3 id="tituloPanel">Nuevo Producto</h3>
 
         ```
         <input id="nombre" placeholder="Nombre" />
@@ -158,10 +157,21 @@
         let productos = [];
         let tickets = [];
         let ticketActivo = null;
+        let productoEditando = null;
 
         /* PANEL */
         function abrirPanel() { document.getElementById("panel").classList.add("open"); }
-        function cerrarPanel() { document.getElementById("panel").classList.remove("open"); }
+        function cerrarPanel() {
+            document.getElementById("panel").classList.remove("open");
+            limpiarFormulario();
+        }
+
+        function limpiarFormulario() {
+            document.getElementById("nombre").value = "";
+            document.getElementById("precio").value = "";
+            productoEditando = null;
+            document.getElementById("tituloPanel").innerText = "Nuevo Producto";
+        }
 
         /* FETCH */
         async function fetchTimeout(url, options = {}, timeout = 2000) {
@@ -178,7 +188,32 @@
             }
         }
 
-        /* GUARDAR PRODUCTO EN BD */
+        /* CRUD PRODUCTOS */
+        function editarProducto(id) {
+            const p = productos.find(x => x.id === id);
+            if (!p) return;
+
+            productoEditando = p;
+
+            document.getElementById("nombre").value = p.nombre;
+            document.getElementById("precio").value = p.precio;
+            document.getElementById("tituloPanel").innerText = "Editar Producto";
+
+            abrirPanel();
+        }
+
+        async function eliminarProducto(id) {
+            if (!confirm("¿Eliminar producto?")) return;
+
+            try {
+                await fetchTimeout(`http://localhost:5210/productos/${id}`, { method: "DELETE" });
+                mostrarToast("Eliminado ✔");
+                cargarProductos();
+            } catch {
+                mostrarToast("Error eliminando");
+            }
+        }
+
         async function guardarProducto() {
             const nombre = document.getElementById("nombre").value.trim();
             const precio = parseFloat(document.getElementById("precio").value);
@@ -189,22 +224,35 @@
             }
 
             try {
-                await fetchTimeout("http://localhost:5210/productos", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        nombre,
-                        precio,
-                        tipo: "General"
-                    })
-                });
+                if (productoEditando) {
+                    await fetchTimeout(`http://localhost:5210/productos/${productoEditando.id}`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            id: productoEditando.id,
+                            nombre,
+                            precio,
+                            tipo: "General"
+                        })
+                    });
 
-                mostrarToast("Producto guardado ✔");
+                    mostrarToast("Actualizado ✔");
+
+                } else {
+                    await fetchTimeout("http://localhost:5210/productos", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ nombre, precio, tipo: "General" })
+                    });
+
+                    mostrarToast("Creado ✔");
+                }
+
                 cerrarPanel();
                 cargarProductos();
 
             } catch {
-                mostrarToast("Error al guardar");
+                mostrarToast("Error guardando");
             }
         }
 
@@ -231,19 +279,25 @@
             }
         }
 
-        /* TABLA */
+        /* 🔥 TABLA CORREGIDA */
         function renderTablaProductos(lista = productos) {
             const tbody = document.getElementById("tablaProductos");
             tbody.innerHTML = "";
 
             lista.forEach(p => {
                 const tr = document.createElement("tr");
+
+                // CLICK FILA → carrito
                 tr.onclick = () => agregar(p);
 
                 tr.innerHTML = `
                 <td>${p.id}</td>
                 <td>${p.nombre}</td>
                 <td>$${p.precio}</td>
+                <td>
+                    <button onclick="event.stopPropagation(); editarProducto(${p.id})">✏️</button>
+                    <button onclick="event.stopPropagation(); eliminarProducto(${p.id})">🗑️</button>
+                </td>
             `;
 
                 tbody.appendChild(tr);
@@ -261,12 +315,11 @@
             renderTablaProductos(filtrados);
         }
 
-        /* TICKETS (RESTAURADO) */
+        /* TICKETS */
         function nuevoTicket() {
             const ticket = { id: Date.now(), carrito: [] };
             tickets.push(ticket);
             ticketActivo = ticket;
-
             renderTickets();
             render();
         }
@@ -277,7 +330,6 @@
 
             tickets.forEach(t => {
                 const btn = document.createElement("div");
-
                 btn.className = "ticket " + (t.id === ticketActivo?.id ? "activo" : "");
                 btn.innerText = "Cliente " + t.id;
 
@@ -368,7 +420,7 @@
                 uuid: crypto.randomUUID(),
                 fecha: new Date(),
                 total: detalles.reduce((a, b) => a + b.subtotal, 0),
-                detalles: detalles
+                detalles
             };
 
             try {
@@ -382,7 +434,7 @@
 
             } catch {
                 guardarOffline(venta);
-                mostrarToast("Guardado offline ✔");
+                mostrarToast("Offline ✔");
             }
 
             tickets = tickets.filter(t => t.id !== ticketActivo.id);
@@ -406,7 +458,7 @@
 
             if (cola.length === 0) return;
 
-            let nuevasCola = [];
+            let nuevas = [];
 
             for (let venta of cola) {
                 try {
@@ -416,14 +468,14 @@
                         body: JSON.stringify(venta)
                     });
                 } catch {
-                    nuevasCola.push(venta);
+                    nuevas.push(venta);
                 }
             }
 
-            localStorage.setItem("colaVentas", JSON.stringify(nuevasCola));
+            localStorage.setItem("colaVentas", JSON.stringify(nuevas));
 
-            if (nuevasCola.length === 0) {
-                mostrarToast("Ventas sincronizadas ✔");
+            if (nuevas.length === 0) {
+                mostrarToast("Sync OK ✔");
             }
         }
 
@@ -433,15 +485,11 @@
             t.innerText = msg;
             t.style.display = "block";
 
-            setTimeout(() => {
-                t.style.display = "none";
-            }, 2500);
+            setTimeout(() => t.style.display = "none", 2500);
         }
 
-        /* AUTO */
-        setInterval(sincronizar, 4000);
-
         /* INIT */
+        setInterval(sincronizar, 4000);
         cargarProductos();
         nuevoTicket();
 
