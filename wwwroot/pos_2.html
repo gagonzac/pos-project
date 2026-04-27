@@ -46,7 +46,6 @@
             text-align: center;
         }
 
-        /* 🔥 mejora UX */
         #tablaProductos tr {
             cursor: pointer;
         }
@@ -70,6 +69,23 @@
             padding: 8px;
             width: 60%;
         }
+
+        /* PANEL LATERAL */
+        #panel {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 280px;
+            height: 100%;
+            background: white;
+            border-left: 1px solid #ccc;
+            padding: 15px;
+            transition: 0.3s;
+        }
+
+            #panel.open {
+                right: 0;
+            }
     </style>
     ```
 
@@ -79,7 +95,7 @@
 
     <h2>POS Fluido</h2>
 
-    <button onclick="nuevoTicket()">+ Nuevo Cliente</button>
+    <button onclick="nuevoTicket()">+ Nuevo Cliente</button> <button onclick="abrirPanel()">+ Agregar Producto</button>
 
     <h3>Tickets</h3>
     <div id="tickets"></div>
@@ -105,14 +121,9 @@
 
     <button onclick="finalizarVenta()">Finalizar Venta</button>
 
-    <!-- 🔥 BUSCADOR + TABLA -->
-
     <h3>Listado de Productos</h3>
 
-    <input type="text"
-           id="buscarProducto"
-           placeholder="Buscar por código o nombre..."
-           oninput="filtrarProductos()" />
+    <input type="text" id="buscarProducto" placeholder="Buscar..." oninput="filtrarProductos()" />
 
     <table>
         <thead>
@@ -125,6 +136,21 @@
         <tbody id="tablaProductos"></tbody>
     </table>
 
+    <!-- PANEL -->
+
+    <div id="panel">
+        <h3>Nuevo Producto</h3>
+
+        ```
+        <input id="nombre" placeholder="Nombre" />
+        <input id="precio" type="number" placeholder="Precio" />
+
+        <button onclick="guardarProducto()">Guardar</button>
+        <button onclick="cerrarPanel()">Cerrar</button>
+        ```
+
+    </div>
+
     <div id="toast"></div>
 
     <script>
@@ -132,6 +158,10 @@
         let productos = [];
         let tickets = [];
         let ticketActivo = null;
+
+        /* PANEL */
+        function abrirPanel() { document.getElementById("panel").classList.add("open"); }
+        function cerrarPanel() { document.getElementById("panel").classList.remove("open"); }
 
         /* FETCH */
         async function fetchTimeout(url, options = {}, timeout = 2000) {
@@ -148,32 +178,34 @@
             }
         }
 
-        /* TICKETS */
-        function nuevoTicket() {
-            const ticket = { id: Date.now(), carrito: [] };
-            tickets.push(ticket);
-            ticketActivo = ticket;
-            renderTickets();
-            render();
-        }
+        /* GUARDAR PRODUCTO EN BD */
+        async function guardarProducto() {
+            const nombre = document.getElementById("nombre").value.trim();
+            const precio = parseFloat(document.getElementById("precio").value);
 
-        function seleccionarTicket(id) {
-            ticketActivo = tickets.find(t => t.id === id);
-            renderTickets();
-            render();
-        }
+            if (!nombre || isNaN(precio)) {
+                mostrarToast("Datos inválidos");
+                return;
+            }
 
-        function renderTickets() {
-            const div = document.getElementById("tickets");
-            div.innerHTML = "";
+            try {
+                await fetchTimeout("http://localhost:5210/productos", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        nombre,
+                        precio,
+                        tipo: "General"
+                    })
+                });
 
-            tickets.forEach(t => {
-                const btn = document.createElement("div");
-                btn.className = "ticket " + (t.id === ticketActivo?.id ? "activo" : "");
-                btn.innerText = "Cliente " + t.id;
-                btn.onclick = () => seleccionarTicket(t.id);
-                div.appendChild(btn);
-            });
+                mostrarToast("Producto guardado ✔");
+                cerrarPanel();
+                cargarProductos();
+
+            } catch {
+                mostrarToast("Error al guardar");
+            }
         }
 
         /* PRODUCTOS */
@@ -199,15 +231,14 @@
             }
         }
 
-        /* 🔥 TABLA CLICKABLE */
+        /* TABLA */
         function renderTablaProductos(lista = productos) {
             const tbody = document.getElementById("tablaProductos");
             tbody.innerHTML = "";
 
             lista.forEach(p => {
                 const tr = document.createElement("tr");
-
-                tr.onclick = () => agregar(p); // 🔥 clave
+                tr.onclick = () => agregar(p);
 
                 tr.innerHTML = `
                 <td>${p.id}</td>
@@ -220,10 +251,7 @@
         }
 
         function filtrarProductos() {
-            const texto = document
-                .getElementById("buscarProducto")
-                .value
-                .toLowerCase();
+            const texto = document.getElementById("buscarProducto").value.toLowerCase();
 
             const filtrados = productos.filter(p =>
                 p.nombre.toLowerCase().includes(texto) ||
@@ -231,6 +259,36 @@
             );
 
             renderTablaProductos(filtrados);
+        }
+
+        /* TICKETS (RESTAURADO) */
+        function nuevoTicket() {
+            const ticket = { id: Date.now(), carrito: [] };
+            tickets.push(ticket);
+            ticketActivo = ticket;
+
+            renderTickets();
+            render();
+        }
+
+        function renderTickets() {
+            const div = document.getElementById("tickets");
+            div.innerHTML = "";
+
+            tickets.forEach(t => {
+                const btn = document.createElement("div");
+
+                btn.className = "ticket " + (t.id === ticketActivo?.id ? "activo" : "");
+                btn.innerText = "Cliente " + t.id;
+
+                btn.onclick = () => {
+                    ticketActivo = t;
+                    renderTickets();
+                    render();
+                };
+
+                div.appendChild(btn);
+            });
         }
 
         /* CARRITO */
@@ -265,10 +323,7 @@
             const tbody = document.getElementById("carrito");
             tbody.innerHTML = "";
 
-            if (!ticketActivo) {
-                document.getElementById("total").innerText = 0;
-                return;
-            }
+            if (!ticketActivo) return;
 
             let total = 0;
 
