@@ -13,7 +13,106 @@
 
     <style>
         body {
-            font-family: Arial;
+            font-family: Consolas, monospace;
+            margin: 0;
+        }
+
+        /* ===== SIDEBAR ===== */
+        #sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 60px;
+            height: 100vh;
+            background: #fff;
+            border-right: 1px solid #ccc;
+            overflow: hidden;
+            transition: width .25s;
+        }
+
+            #sidebar.expandido {
+                width: 240px;
+            }
+
+        #toggleBtn {
+            cursor: pointer;
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .menu-item {
+            padding: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            user-select: none;
+        }
+
+            .menu-item:hover {
+                background: #f2f2f2;
+            }
+
+        .icon {
+            margin-right: 10px;
+        }
+
+        .texto {
+            display: none;
+        }
+
+        #sidebar.expandido .texto {
+            display: inline;
+        }
+
+        /* Tooltip básico usando title (nativo) + data-label (fallback visual) */
+        .menu-item[data-label]::after {
+            content: attr(data-label);
+            position: absolute;
+            left: 70px;
+            top: auto;
+            background: #333;
+            color: #fff;
+            padding: 4px 6px;
+            font-size: 12px;
+            border-radius: 3px;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(-50%);
+        }
+
+        #sidebar:not(.expandido) .menu-item:hover::after {
+            opacity: 1;
+        }
+
+        /* Submenú */
+        .submenu {
+            display: none;
+            padding-left: 30px;
+            font-size: 13px;
+        }
+
+            .submenu div {
+                padding: 6px 0;
+                cursor: pointer;
+            }
+
+                .submenu div:hover {
+                    text-decoration: underline;
+                }
+
+        .menu-item.open + .submenu {
+            display: block;
+        }
+
+        /* ===== CONTENIDO ===== */
+        #main {
+            margin-left: 60px;
+            padding: 20px;
+            transition: margin-left .25s;
+        }
+
+        #sidebar.expandido + #main {
+            margin-left: 240px;
         }
 
         button {
@@ -31,7 +130,7 @@
 
         .activo {
             background: #4CAF50;
-            color: white;
+            color: #fff;
         }
 
         table {
@@ -46,7 +145,6 @@
             text-align: center;
         }
 
-        /* 🔥 mejora UX */
         #tablaProductos tr {
             cursor: pointer;
         }
@@ -60,7 +158,7 @@
             bottom: 20px;
             right: 20px;
             background: #333;
-            color: white;
+            color: #fff;
             padding: 15px;
             display: none;
         }
@@ -77,78 +175,210 @@
 
 <body>
 
-    <h2>POS Fluido</h2>
+    <!-- ===== SIDEBAR ===== -->
 
-    <button onclick="nuevoTicket()">+ Nuevo Cliente</button>
+    <div id="sidebar">
+        <div id="toggleBtn" onclick="toggleMenu()">☰</div>
 
-    <h3>Tickets</h3>
-    <div id="tickets"></div>
+        ```
+        <!-- Ventas -->
+        <div class="menu-item" data-label="Ventas" title="Ventas" onclick="toggleSubmenu(this)">
+            <span class="icon">🧾</span><span class="texto">Ventas</span>
+        </div>
+        <div class="submenu">
+            <div>Nueva venta</div>
+            <div>Agregar producto</div>
+            <div>Venta por peso</div>
+            <div>Descuentos</div>
+            <div>Total y pago</div>
+            <div>Imprimir boleta</div>
+            <div>Anular venta</div>
+        </div>
 
-    <h3>Productos</h3>
-    <div id="productos"></div>
+        <!-- Productos -->
+        <div class="menu-item" data-label="Productos" title="Productos" onclick="toggleSubmenu(this)">
+            <span class="icon">📦</span><span class="texto">Productos</span>
+        </div>
+        <div class="submenu">
+            <div>Lista de productos</div>
+            <div>Crear producto</div>
+            <div>Editar producto</div>
+            <div>Eliminar producto</div>
+            <div>Categorías</div>
+            <div>Precios</div>
+            <div>Unidad</div>
+        </div>
 
-    <h3>Carrito</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>Producto</th>
-                <th>Cantidad</th>
-                <th>Precio</th>
-                <th>Subtotal</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody id="carrito"></tbody>
-    </table>
+        <!-- Inventario -->
+        <div class="menu-item" data-label="Inventario" title="Inventario" onclick="toggleSubmenu(this)">
+            <span class="icon">📊</span><span class="texto">Inventario</span>
+        </div>
+        <div class="submenu">
+            <div>Stock actual</div>
+            <div>Ajuste de stock</div>
+            <div>Entrada de productos</div>
+            <div>Salida de productos</div>
+            <div>Mermas</div>
+        </div>
 
-    <h3>Total: $<span id="total">0</span></h3>
+        <!-- Caja -->
+        <div class="menu-item" data-label="Caja" title="Caja" onclick="toggleSubmenu(this)">
+            <span class="icon">💰</span><span class="texto">Caja</span>
+        </div>
+        <div class="submenu">
+            <div>Apertura</div>
+            <div>Cierre</div>
+            <div>Ingresos</div>
+            <div>Egresos</div>
+            <div>Cuadre</div>
+        </div>
 
-    <button onclick="finalizarVenta()">Finalizar Venta</button>
+        <!-- Clientes -->
+        <div class="menu-item" data-label="Clientes" title="Clientes" onclick="toggleSubmenu(this)">
+            <span class="icon">🧑‍💼</span><span class="texto">Clientes</span>
+        </div>
+        <div class="submenu">
+            <div>Lista</div>
+            <div>Crear</div>
+            <div>Editar</div>
+            <div>Crédito</div>
+        </div>
 
-    <!-- 🔥 BUSCADOR + TABLA -->
+        <!-- Proveedores -->
+        <div class="menu-item" data-label="Proveedores" title="Proveedores" onclick="toggleSubmenu(this)">
+            <span class="icon">🚚</span><span class="texto">Proveedores</span>
+        </div>
+        <div class="submenu">
+            <div>Lista</div>
+            <div>Crear</div>
+            <div>Editar</div>
+            <div>Compras</div>
+        </div>
 
-    <h3>Listado de Productos</h3>
+        <!-- Reportes -->
+        <div class="menu-item" data-label="Reportes" title="Reportes" onclick="toggleSubmenu(this)">
+            <span class="icon">📈</span><span class="texto">Reportes</span>
+        </div>
+        <div class="submenu">
+            <div>Ventas día</div>
+            <div>Por producto</div>
+            <div>Stock</div>
+            <div>Mermas</div>
+            <div>Caja</div>
+        </div>
 
-    <input type="text"
-           id="buscarProducto"
-           placeholder="Buscar por código o nombre..."
-           oninput="filtrarProductos()" />
+        <!-- Usuarios -->
+        <div class="menu-item" data-label="Usuarios" title="Usuarios" onclick="toggleSubmenu(this)">
+            <span class="icon">👤</span><span class="texto">Usuarios</span>
+        </div>
+        <div class="submenu">
+            <div>Lista</div>
+            <div>Roles</div>
+            <div>Acceso</div>
+        </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Código</th>
-                <th>Nombre</th>
-                <th>Precio</th>
-            </tr>
-        </thead>
-        <tbody id="tablaProductos"></tbody>
-    </table>
+        <!-- Config -->
+        <div class="menu-item" data-label="Configuración" title="Configuración" onclick="toggleSubmenu(this)">
+            <span class="icon">⚙️</span><span class="texto">Configuración</span>
+        </div>
+        <div class="submenu">
+            <div>Negocio</div>
+            <div>Impuestos</div>
+            <div>Pagos</div>
+            <div>Impresora</div>
+        </div>
+        ```
+
+    </div>
+
+    <!-- ===== CONTENIDO PRINCIPAL (VENTAS) ===== -->
+
+    <div id="main">
+
+        <h2>POS Fluido</h2>
+
+        <button onclick="nuevoTicket()">+ Nuevo Cliente</button>
+
+        <h3>Tickets</h3>
+        <div id="tickets"></div>
+
+        <h3>Productos</h3>
+        <div id="productos"></div>
+
+        <h3>Carrito</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Precio</th>
+                    <th>Subtotal</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="carrito"></tbody>
+        </table>
+
+        <h3>Total: $<span id="total">0</span></h3>
+
+        <button onclick="finalizarVenta()">Finalizar Venta</button>
+
+        <h3>Listado de Productos</h3>
+
+        <input type="text" id="buscarProducto" placeholder="Buscar..." oninput="filtrarProductos()" />
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Nombre</th>
+                    <th>Precio</th>
+                </tr>
+            </thead>
+            <tbody id="tablaProductos"></tbody>
+        </table>
+
+    </div>
 
     <div id="toast"></div>
 
     <script>
 
+        /* ===== MENU ===== */
+        function toggleMenu() {
+            document.getElementById("sidebar").classList.toggle("expandido");
+        }
+
+        function toggleSubmenu(el) {
+            const sidebar = document.getElementById("sidebar");
+            if (!sidebar.classList.contains("expandido")) return; // solo cuando está expandido
+
+            // cerrar otros
+            document.querySelectorAll(".menu-item").forEach(i => {
+                if (i !== el) i.classList.remove("open");
+            });
+
+            el.classList.toggle("open");
+        }
+
+        /* ===== POS ORIGINAL ===== */
         let productos = [];
         let tickets = [];
         let ticketActivo = null;
 
-        /* FETCH */
         async function fetchTimeout(url, options = {}, timeout = 2000) {
             const controller = new AbortController();
             const id = setTimeout(() => controller.abort(), timeout);
-
             try {
                 const response = await fetch(url, { ...options, signal: controller.signal });
                 clearTimeout(id);
                 return response;
-            } catch (error) {
+            } catch (e) {
                 clearTimeout(id);
-                throw error;
+                throw e;
             }
         }
 
-        /* TICKETS */
         function nuevoTicket() {
             const ticket = { id: Date.now(), carrito: [] };
             tickets.push(ticket);
@@ -166,7 +396,6 @@
         function renderTickets() {
             const div = document.getElementById("tickets");
             div.innerHTML = "";
-
             tickets.forEach(t => {
                 const btn = document.createElement("div");
                 btn.className = "ticket " + (t.id === ticketActivo?.id ? "activo" : "");
@@ -176,7 +405,6 @@
             });
         }
 
-        /* PRODUCTOS */
         async function cargarProductos() {
             try {
                 const res = await fetchTimeout("http://localhost:5210/productos");
@@ -193,66 +421,49 @@
                 });
 
                 renderTablaProductos();
-
             } catch {
                 mostrarToast("Error cargando productos");
             }
         }
 
-        /* 🔥 TABLA CLICKABLE */
         function renderTablaProductos(lista = productos) {
             const tbody = document.getElementById("tablaProductos");
             tbody.innerHTML = "";
-
             lista.forEach(p => {
                 const tr = document.createElement("tr");
-
-                tr.onclick = () => agregar(p); // 🔥 clave
-
+                tr.onclick = () => agregar(p);
                 tr.innerHTML = `
                 <td>${p.id}</td>
                 <td>${p.nombre}</td>
                 <td>$${p.precio}</td>
             `;
-
                 tbody.appendChild(tr);
             });
         }
 
         function filtrarProductos() {
-            const texto = document
-                .getElementById("buscarProducto")
-                .value
-                .toLowerCase();
-
+            const texto = document.getElementById("buscarProducto").value.toLowerCase();
             const filtrados = productos.filter(p =>
                 p.nombre.toLowerCase().includes(texto) ||
                 p.id.toString().includes(texto)
             );
-
             renderTablaProductos(filtrados);
         }
 
-        /* CARRITO */
         function agregar(p) {
             if (!ticketActivo) return;
-
             const item = ticketActivo.carrito.find(x => x.id === p.id);
-
             if (item) item.cantidad++;
             else ticketActivo.carrito.push({ ...p, cantidad: 1 });
-
             render();
         }
 
         function cambiarCantidad(id, delta) {
             const item = ticketActivo.carrito.find(x => x.id === id);
             item.cantidad += delta;
-
             if (item.cantidad <= 0) {
                 ticketActivo.carrito = ticketActivo.carrito.filter(x => x.id !== id);
             }
-
             render();
         }
 
@@ -264,20 +475,15 @@
         function render() {
             const tbody = document.getElementById("carrito");
             tbody.innerHTML = "";
-
             if (!ticketActivo) {
                 document.getElementById("total").innerText = 0;
                 return;
             }
-
             let total = 0;
-
             ticketActivo.carrito.forEach(p => {
                 const subtotal = p.precio * p.cantidad;
                 total += subtotal;
-
                 const tr = document.createElement("tr");
-
                 tr.innerHTML = `
                 <td>${p.nombre}</td>
                 <td>${p.cantidad}</td>
@@ -289,14 +495,11 @@
                     <button onclick="eliminar(${p.id})">X</button>
                 </td>
             `;
-
                 tbody.appendChild(tr);
             });
-
             document.getElementById("total").innerText = total;
         }
 
-        /* VENTA */
         async function finalizarVenta() {
             if (!ticketActivo || ticketActivo.carrito.length === 0) {
                 mostrarToast("Carrito vacío");
@@ -313,7 +516,7 @@
                 uuid: crypto.randomUUID(),
                 fecha: new Date(),
                 total: detalles.reduce((a, b) => a + b.subtotal, 0),
-                detalles: detalles
+                detalles
             };
 
             try {
@@ -322,16 +525,13 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(venta)
                 });
-
                 mostrarToast("Venta enviada ✔");
-
             } catch {
                 guardarOffline(venta);
                 mostrarToast("Guardado offline ✔");
             }
 
             tickets = tickets.filter(t => t.id !== ticketActivo.id);
-
             if (tickets.length > 0) ticketActivo = tickets[0];
             else nuevoTicket();
 
@@ -339,7 +539,6 @@
             render();
         }
 
-        /* OFFLINE */
         function guardarOffline(venta) {
             let cola = JSON.parse(localStorage.getItem("colaVentas") || "[]");
             cola.push(venta);
@@ -348,11 +547,9 @@
 
         async function sincronizar() {
             let cola = JSON.parse(localStorage.getItem("colaVentas") || "[]");
-
             if (cola.length === 0) return;
 
             let nuevasCola = [];
-
             for (let venta of cola) {
                 try {
                     await fetchTimeout("http://localhost:5210/ventas", {
@@ -366,27 +563,17 @@
             }
 
             localStorage.setItem("colaVentas", JSON.stringify(nuevasCola));
-
-            if (nuevasCola.length === 0) {
-                mostrarToast("Ventas sincronizadas ✔");
-            }
+            if (nuevasCola.length === 0) mostrarToast("Ventas sincronizadas ✔");
         }
 
-        /* UI */
         function mostrarToast(msg) {
             const t = document.getElementById("toast");
             t.innerText = msg;
             t.style.display = "block";
-
-            setTimeout(() => {
-                t.style.display = "none";
-            }, 2500);
+            setTimeout(() => t.style.display = "none", 2500);
         }
 
-        /* AUTO */
         setInterval(sincronizar, 4000);
-
-        /* INIT */
         cargarProductos();
         nuevoTicket();
 
