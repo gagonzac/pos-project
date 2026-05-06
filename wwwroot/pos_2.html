@@ -1,15 +1,8 @@
 ﻿<!DOCTYPE html>
-
 <html>
 <head>
     <meta charset="UTF-8">
     <title>POS Fluido</title>
-
-    ```
-    <!--
-    POS COMPLETO - MODO CAJA RÁPIDA
-    Backend: http://localhost:5210
-    -->
 
     <style>
         body {
@@ -44,8 +37,7 @@
         .menu-item {
             padding: 12px;
             cursor: pointer;
-            white-space: nowrap;
-            user-select: none;
+            position: relative;
         }
 
             .menu-item:hover {
@@ -64,27 +56,23 @@
             display: inline;
         }
 
-        /* Tooltip básico usando title (nativo) + data-label (fallback visual) */
+        /* tooltip */
         .menu-item[data-label]::after {
             content: attr(data-label);
             position: absolute;
             left: 70px;
-            top: auto;
             background: #333;
             color: #fff;
             padding: 4px 6px;
             font-size: 12px;
             border-radius: 3px;
             opacity: 0;
-            pointer-events: none;
-            transform: translateY(-50%);
         }
 
         #sidebar:not(.expandido) .menu-item:hover::after {
             opacity: 1;
         }
 
-        /* Submenú */
         .submenu {
             display: none;
             padding-left: 30px;
@@ -93,18 +81,13 @@
 
             .submenu div {
                 padding: 6px 0;
-                cursor: pointer;
             }
-
-                .submenu div:hover {
-                    text-decoration: underline;
-                }
 
         .menu-item.open + .submenu {
             display: block;
         }
 
-        /* ===== CONTENIDO ===== */
+        /* ===== MAIN ===== */
         #main {
             margin-left: 60px;
             padding: 20px;
@@ -153,6 +136,12 @@
                 background: #f2f2f2;
             }
 
+        input {
+            margin-top: 10px;
+            padding: 8px;
+            width: 60%;
+        }
+
         #toast {
             position: fixed;
             bottom: 20px;
@@ -162,28 +151,18 @@
             padding: 15px;
             display: none;
         }
-
-        input {
-            margin-top: 10px;
-            padding: 8px;
-            width: 60%;
-        }
     </style>
-    ```
-
 </head>
 
 <body>
 
     <!-- ===== SIDEBAR ===== -->
-
     <div id="sidebar">
         <div id="toggleBtn" onclick="toggleMenu()">☰</div>
 
-        ```
-        <!-- Ventas -->
-        <div class="menu-item" data-label="Ventas" title="Ventas" onclick="toggleSubmenu(this)">
-            <span class="icon">🧾</span><span class="texto">Ventas</span>
+        <!-- VENTAS -->
+        <div class="menu-item" data-label="Ventas" onclick="toggleSubmenu(this)">
+            🧾 <span class="texto">Ventas</span>
         </div>
         <div class="submenu">
             <div>Nueva venta</div>
@@ -195,9 +174,9 @@
             <div>Anular venta</div>
         </div>
 
-        <!-- Productos -->
-        <div class="menu-item" data-label="Productos" title="Productos" onclick="toggleSubmenu(this)">
-            <span class="icon">📦</span><span class="texto">Productos</span>
+        <!-- PRODUCTOS -->
+        <div class="menu-item" data-label="Productos" onclick="toggleSubmenu(this)">
+            📦 <span class="texto">Productos</span>
         </div>
         <div class="submenu">
             <div>Lista de productos</div>
@@ -209,21 +188,21 @@
             <div>Unidad</div>
         </div>
 
-        <!-- Inventario -->
-        <div class="menu-item" data-label="Inventario" title="Inventario" onclick="toggleSubmenu(this)">
-            <span class="icon">📊</span><span class="texto">Inventario</span>
+        <!-- INVENTARIO -->
+        <div class="menu-item" data-label="Inventario" onclick="toggleSubmenu(this)">
+            📊 <span class="texto">Inventario</span>
         </div>
         <div class="submenu">
             <div>Stock actual</div>
-            <div>Ajuste de stock</div>
-            <div>Entrada de productos</div>
-            <div>Salida de productos</div>
+            <div>Ajuste</div>
+            <div>Entrada</div>
+            <div>Salida</div>
             <div>Mermas</div>
         </div>
 
-        <!-- Caja -->
-        <div class="menu-item" data-label="Caja" title="Caja" onclick="toggleSubmenu(this)">
-            <span class="icon">💰</span><span class="texto">Caja</span>
+        <!-- CAJA -->
+        <div class="menu-item" data-label="Caja" onclick="toggleSubmenu(this)">
+            💰 <span class="texto">Caja</span>
         </div>
         <div class="submenu">
             <div>Apertura</div>
@@ -233,9 +212,9 @@
             <div>Cuadre</div>
         </div>
 
-        <!-- Clientes -->
-        <div class="menu-item" data-label="Clientes" title="Clientes" onclick="toggleSubmenu(this)">
-            <span class="icon">🧑‍💼</span><span class="texto">Clientes</span>
+        <!-- CLIENTES -->
+        <div class="menu-item" data-label="Clientes" onclick="toggleSubmenu(this)">
+            🧑‍💼 <span class="texto">Clientes</span>
         </div>
         <div class="submenu">
             <div>Lista</div>
@@ -244,9 +223,9 @@
             <div>Crédito</div>
         </div>
 
-        <!-- Proveedores -->
-        <div class="menu-item" data-label="Proveedores" title="Proveedores" onclick="toggleSubmenu(this)">
-            <span class="icon">🚚</span><span class="texto">Proveedores</span>
+        <!-- PROVEEDORES -->
+        <div class="menu-item" data-label="Proveedores" onclick="toggleSubmenu(this)">
+            🚚 <span class="texto">Proveedores</span>
         </div>
         <div class="submenu">
             <div>Lista</div>
@@ -255,9 +234,9 @@
             <div>Compras</div>
         </div>
 
-        <!-- Reportes -->
-        <div class="menu-item" data-label="Reportes" title="Reportes" onclick="toggleSubmenu(this)">
-            <span class="icon">📈</span><span class="texto">Reportes</span>
+        <!-- REPORTES -->
+        <div class="menu-item" data-label="Reportes" onclick="toggleSubmenu(this)">
+            📈 <span class="texto">Reportes</span>
         </div>
         <div class="submenu">
             <div>Ventas día</div>
@@ -267,9 +246,9 @@
             <div>Caja</div>
         </div>
 
-        <!-- Usuarios -->
-        <div class="menu-item" data-label="Usuarios" title="Usuarios" onclick="toggleSubmenu(this)">
-            <span class="icon">👤</span><span class="texto">Usuarios</span>
+        <!-- USUARIOS -->
+        <div class="menu-item" data-label="Usuarios" onclick="toggleSubmenu(this)">
+            👤 <span class="texto">Usuarios</span>
         </div>
         <div class="submenu">
             <div>Lista</div>
@@ -277,9 +256,9 @@
             <div>Acceso</div>
         </div>
 
-        <!-- Config -->
-        <div class="menu-item" data-label="Configuración" title="Configuración" onclick="toggleSubmenu(this)">
-            <span class="icon">⚙️</span><span class="texto">Configuración</span>
+        <!-- CONFIG -->
+        <div class="menu-item" data-label="Configuración" onclick="toggleSubmenu(this)">
+            ⚙️ <span class="texto">Configuración</span>
         </div>
         <div class="submenu">
             <div>Negocio</div>
@@ -287,12 +266,9 @@
             <div>Pagos</div>
             <div>Impresora</div>
         </div>
-        ```
-
     </div>
 
-    <!-- ===== CONTENIDO PRINCIPAL (VENTAS) ===== -->
-
+    <!-- ===== MAIN ===== -->
     <div id="main">
 
         <h2>POS Fluido</h2>
@@ -313,7 +289,6 @@
                     <th>Cantidad</th>
                     <th>Precio</th>
                     <th>Subtotal</th>
-                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody id="carrito"></tbody>
@@ -325,7 +300,7 @@
 
         <h3>Listado de Productos</h3>
 
-        <input type="text" id="buscarProducto" placeholder="Buscar..." oninput="filtrarProductos()" />
+        <input type="text" id="buscarProducto" oninput="filtrarProductos()" placeholder="Buscar...">
 
         <table>
             <thead>
@@ -344,16 +319,21 @@
 
     <script>
 
-        /* ===== MENU ===== */
+        /* ===== MENU FIX ===== */
         function toggleMenu() {
-            document.getElementById("sidebar").classList.toggle("expandido");
+            const sidebar = document.getElementById("sidebar");
+            sidebar.classList.toggle("expandido");
+
+            if (!sidebar.classList.contains("expandido")) {
+                document.querySelectorAll(".menu-item")
+                    .forEach(i => i.classList.remove("open"));
+            }
         }
 
         function toggleSubmenu(el) {
             const sidebar = document.getElementById("sidebar");
-            if (!sidebar.classList.contains("expandido")) return; // solo cuando está expandido
+            if (!sidebar.classList.contains("expandido")) return;
 
-            // cerrar otros
             document.querySelectorAll(".menu-item").forEach(i => {
                 if (i !== el) i.classList.remove("open");
             });
@@ -361,219 +341,100 @@
             el.classList.toggle("open");
         }
 
-        /* ===== POS ORIGINAL ===== */
+        /* ===== POS ===== */
         let productos = [];
         let tickets = [];
         let ticketActivo = null;
 
-        async function fetchTimeout(url, options = {}, timeout = 2000) {
-            const controller = new AbortController();
-            const id = setTimeout(() => controller.abort(), timeout);
-            try {
-                const response = await fetch(url, { ...options, signal: controller.signal });
-                clearTimeout(id);
-                return response;
-            } catch (e) {
-                clearTimeout(id);
-                throw e;
-            }
+        async function cargarProductos() {
+            const res = await fetch("http://localhost:5210/productos");
+            productos = await res.json();
+
+            renderBotones();
+            renderTablaProductos();
         }
 
-        function nuevoTicket() {
-            const ticket = { id: Date.now(), carrito: [] };
-            tickets.push(ticket);
-            ticketActivo = ticket;
-            renderTickets();
-            render();
-        }
-
-        function seleccionarTicket(id) {
-            ticketActivo = tickets.find(t => t.id === id);
-            renderTickets();
-            render();
-        }
-
-        function renderTickets() {
-            const div = document.getElementById("tickets");
+        function renderBotones() {
+            const div = document.getElementById("productos");
             div.innerHTML = "";
-            tickets.forEach(t => {
-                const btn = document.createElement("div");
-                btn.className = "ticket " + (t.id === ticketActivo?.id ? "activo" : "");
-                btn.innerText = "Cliente " + t.id;
-                btn.onclick = () => seleccionarTicket(t.id);
+
+            productos.forEach(p => {
+                const btn = document.createElement("button");
+                btn.innerText = p.nombre + " $" + p.precio;
+                btn.onclick = () => agregar(p);
                 div.appendChild(btn);
             });
-        }
-
-        async function cargarProductos() {
-            try {
-                const res = await fetchTimeout("http://localhost:5210/productos");
-                productos = await res.json();
-
-                const div = document.getElementById("productos");
-                div.innerHTML = "";
-
-                productos.forEach(p => {
-                    const btn = document.createElement("button");
-                    btn.innerText = p.nombre + " $" + p.precio;
-                    btn.onclick = () => agregar(p);
-                    div.appendChild(btn);
-                });
-
-                renderTablaProductos();
-            } catch {
-                mostrarToast("Error cargando productos");
-            }
         }
 
         function renderTablaProductos(lista = productos) {
             const tbody = document.getElementById("tablaProductos");
             tbody.innerHTML = "";
+
             lista.forEach(p => {
                 const tr = document.createElement("tr");
                 tr.onclick = () => agregar(p);
+
                 tr.innerHTML = `
                 <td>${p.id}</td>
                 <td>${p.nombre}</td>
                 <td>$${p.precio}</td>
             `;
+
                 tbody.appendChild(tr);
             });
         }
 
         function filtrarProductos() {
-            const texto = document.getElementById("buscarProducto").value.toLowerCase();
+            const txt = document.getElementById("buscarProducto").value.toLowerCase();
+
             const filtrados = productos.filter(p =>
-                p.nombre.toLowerCase().includes(texto) ||
-                p.id.toString().includes(texto)
+                p.nombre.toLowerCase().includes(txt) ||
+                p.id.toString().includes(txt)
             );
+
             renderTablaProductos(filtrados);
+        }
+
+        function nuevoTicket() {
+            const t = { id: Date.now(), carrito: [] };
+            tickets.push(t);
+            ticketActivo = t;
         }
 
         function agregar(p) {
             if (!ticketActivo) return;
+
             const item = ticketActivo.carrito.find(x => x.id === p.id);
+
             if (item) item.cantidad++;
             else ticketActivo.carrito.push({ ...p, cantidad: 1 });
-            render();
-        }
 
-        function cambiarCantidad(id, delta) {
-            const item = ticketActivo.carrito.find(x => x.id === id);
-            item.cantidad += delta;
-            if (item.cantidad <= 0) {
-                ticketActivo.carrito = ticketActivo.carrito.filter(x => x.id !== id);
-            }
-            render();
-        }
-
-        function eliminar(id) {
-            ticketActivo.carrito = ticketActivo.carrito.filter(x => x.id !== id);
             render();
         }
 
         function render() {
             const tbody = document.getElementById("carrito");
             tbody.innerHTML = "";
-            if (!ticketActivo) {
-                document.getElementById("total").innerText = 0;
-                return;
-            }
+
             let total = 0;
+
             ticketActivo.carrito.forEach(p => {
-                const subtotal = p.precio * p.cantidad;
-                total += subtotal;
+                const sub = p.precio * p.cantidad;
+                total += sub;
+
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
                 <td>${p.nombre}</td>
                 <td>${p.cantidad}</td>
                 <td>$${p.precio}</td>
-                <td>$${subtotal}</td>
-                <td>
-                    <button onclick="cambiarCantidad(${p.id},1)">+</button>
-                    <button onclick="cambiarCantidad(${p.id},-1)">-</button>
-                    <button onclick="eliminar(${p.id})">X</button>
-                </td>
+                <td>$${sub}</td>
             `;
                 tbody.appendChild(tr);
             });
+
             document.getElementById("total").innerText = total;
         }
 
-        async function finalizarVenta() {
-            if (!ticketActivo || ticketActivo.carrito.length === 0) {
-                mostrarToast("Carrito vacío");
-                return;
-            }
-
-            const detalles = ticketActivo.carrito.map(p => ({
-                productoId: p.id,
-                cantidad: p.cantidad,
-                subtotal: p.precio * p.cantidad
-            }));
-
-            const venta = {
-                uuid: crypto.randomUUID(),
-                fecha: new Date(),
-                total: detalles.reduce((a, b) => a + b.subtotal, 0),
-                detalles
-            };
-
-            try {
-                await fetchTimeout("http://localhost:5210/ventas", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(venta)
-                });
-                mostrarToast("Venta enviada ✔");
-            } catch {
-                guardarOffline(venta);
-                mostrarToast("Guardado offline ✔");
-            }
-
-            tickets = tickets.filter(t => t.id !== ticketActivo.id);
-            if (tickets.length > 0) ticketActivo = tickets[0];
-            else nuevoTicket();
-
-            renderTickets();
-            render();
-        }
-
-        function guardarOffline(venta) {
-            let cola = JSON.parse(localStorage.getItem("colaVentas") || "[]");
-            cola.push(venta);
-            localStorage.setItem("colaVentas", JSON.stringify(cola));
-        }
-
-        async function sincronizar() {
-            let cola = JSON.parse(localStorage.getItem("colaVentas") || "[]");
-            if (cola.length === 0) return;
-
-            let nuevasCola = [];
-            for (let venta of cola) {
-                try {
-                    await fetchTimeout("http://localhost:5210/ventas", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(venta)
-                    });
-                } catch {
-                    nuevasCola.push(venta);
-                }
-            }
-
-            localStorage.setItem("colaVentas", JSON.stringify(nuevasCola));
-            if (nuevasCola.length === 0) mostrarToast("Ventas sincronizadas ✔");
-        }
-
-        function mostrarToast(msg) {
-            const t = document.getElementById("toast");
-            t.innerText = msg;
-            t.style.display = "block";
-            setTimeout(() => t.style.display = "none", 2500);
-        }
-
-        setInterval(sincronizar, 4000);
         cargarProductos();
         nuevoTicket();
 
